@@ -12,16 +12,24 @@ public class StatementPrinter {
     private final Invoice invoice;
     private final Map<String, Play> plays;
 
+    /**
+     * Creates a new StatementPrinter for the given invoice and play mapping.
+     *
+     * @param invoice the invoice containing performances
+     * @param plays   a map of play IDs to Play objects
+     */
     public StatementPrinter(Invoice invoice, Map<String, Play> plays) {
         this.invoice = invoice;
         this.plays = plays;
     }
 
     /**
-     * Returns a formatted statement of the invoice associated with this printer.
+     * Generates and returns a formatted statement for the invoice associated
+     * with this printer. The statement includes the cost for each performance,
+     * the total amount owed, and the volume credits earned.
      *
-     * @return the formatted statement
-     * @throws RuntimeException if one of the play types is unknown
+     * @return a formatted multi-line string representing the statement
+     * @throws RuntimeException if a performance references a play type that is unknown
      */
     public String statement() {
         int totalAmount = 0;
@@ -40,16 +48,10 @@ public class StatementPrinter {
 
             totalAmount += getAmount(performance);
 
-            // add volume credits
-            volumeCredits += Math.max(performance.getAudience()
-                    - Constants.BASE_VOLUME_CREDIT_THRESHOLD, 0);
-
-            // add extra credit for every five comedy attendees
-            if ("comedy".equals(getPlay(performance).getType())) {
-                volumeCredits += performance.getAudience()
-                        / Constants.COMEDY_EXTRA_VOLUME_FACTOR;
-            }
+            // Using the new helper
+            volumeCredits += getVolumeCredits(performance);
         }
+
         result.append(String.format("Amount owed is %s%n",
                 form.format(totalAmount / Constants.PERCENT_FACTOR)));
         result.append(String.format("You earned %s credits%n", volumeCredits));
@@ -60,7 +62,7 @@ public class StatementPrinter {
      * Returns the play associated with the given performance.
      *
      * @param performance the performance
-     * @return the play associated with the performance
+     * @return the corresponding Play object
      */
     private Play getPlay(Performance performance) {
         return plays.get(performance.getPlayID());
@@ -69,8 +71,8 @@ public class StatementPrinter {
     /**
      * Computes the amount owed for a given performance.
      *
-     * @param performance the performance to compute the amount for
-     * @return the total amount for the performance
+     * @param performance the performance to evaluate
+     * @return the calculated amount
      * @throws RuntimeException if the play type is unknown
      */
     private int getAmount(Performance performance) {
@@ -103,5 +105,26 @@ public class StatementPrinter {
         }
         return result;
     }
-}
 
+    /**
+     * Computes the volume credits earned for a given performance.
+     *
+     * @param performance the performance
+     * @return the number of volume credits earned
+     */
+    private int getVolumeCredits(Performance performance) {
+        int result = 0;
+
+        // base volume credit
+        result += Math.max(performance.getAudience()
+                - Constants.BASE_VOLUME_CREDIT_THRESHOLD, 0);
+
+        // bonus for comedy
+        if ("comedy".equals(getPlay(performance).getType())) {
+            result += performance.getAudience()
+                    / Constants.COMEDY_EXTRA_VOLUME_FACTOR;
+        }
+
+        return result;
+    }
+}
