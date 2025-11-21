@@ -32,26 +32,25 @@ public class StatementPrinter {
      * @throws RuntimeException if a performance references a play type that is unknown
      */
     public String statement() {
-        int totalAmount = 0;
-        int volumeCredits = 0;
-        final StringBuilder result = new StringBuilder("Statement for "
-                + invoice.getCustomer() + System.lineSeparator());
 
+        final StringBuilder result = new StringBuilder(
+                "Statement for " + invoice.getCustomer() + System.lineSeparator()
+        );
+
+        // Loop 1 — build all lines
         for (Performance performance : invoice.getPerformances()) {
-            // print line for this order
             result.append(String.format("  %s: %s (%s seats)%n",
                     getPlay(performance).getName(),
                     usd(getAmount(performance)),
                     performance.getAudience()));
-
-            totalAmount += getAmount(performance);
-
-            // Using the helper
-            volumeCredits += getVolumeCredits(performance);
         }
 
-        result.append(String.format("Amount owed is %s%n", usd(totalAmount)));
-        result.append(String.format("You earned %s credits%n", volumeCredits));
+        // Loop 2 — use helper for total amount
+        result.append(String.format("Amount owed is %s%n", usd(getTotalAmount())));
+
+        // Loop 3 — use helper for total volume credits
+        result.append(String.format("You earned %s credits%n", getTotalVolumeCredits()));
+
         return result.toString();
     }
 
@@ -104,6 +103,19 @@ public class StatementPrinter {
     }
 
     /**
+     * Computes the total amount owed for the invoice.
+     *
+     * @return the total amount in cents
+     */
+    private int getTotalAmount() {
+        int result = 0;
+        for (Performance p : invoice.getPerformances()) {
+            result += getAmount(p);
+        }
+        return result;
+    }
+
+    /**
      * Computes the volume credits earned for a given performance.
      *
      * @param performance the performance
@@ -122,6 +134,19 @@ public class StatementPrinter {
                     / Constants.COMEDY_EXTRA_VOLUME_FACTOR;
         }
 
+        return result;
+    }
+
+    /**
+     * Computes the total volume credits for the entire invoice.
+     *
+     * @return total volume credits
+     */
+    private int getTotalVolumeCredits() {
+        int result = 0;
+        for (Performance p : invoice.getPerformances()) {
+            result += getVolumeCredits(p);
+        }
         return result;
     }
 
