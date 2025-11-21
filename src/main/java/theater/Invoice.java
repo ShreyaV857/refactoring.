@@ -22,4 +22,5 @@ public class Invoice {
     public final List<Performance> getPerformances() {
         return performances;
     }
-}
+} // Done
+
