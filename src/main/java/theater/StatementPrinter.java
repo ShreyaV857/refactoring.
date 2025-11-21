@@ -160,5 +160,5 @@ public class StatementPrinter {
         return NumberFormat.getCurrencyInstance(Locale.US)
                 .format(amount / Constants.PERCENT_FACTOR);
     }
-}
+} // Done
 
